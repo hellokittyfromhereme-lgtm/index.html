@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Cinematic 50-70 Flag Battle Arena</title>
+<title>Big Arena Flag Fight</title>
 <style>
 body { margin:0; overflow:hidden; background:#0a0f2c; font-family:Arial; }
 canvas { display:block; }
@@ -12,22 +12,16 @@ canvas { display:block; }
 <canvas id="arena"></canvas>
 
 <script>
-// Canvas setup
 const canvas=document.getElementById('arena');
 const ctx=canvas.getContext('2d');
 canvas.width=window.innerWidth;
 canvas.height=window.innerHeight;
+
 const centerX=canvas.width/2, centerY=canvas.height/2;
-let arenaRadius=Math.min(canvas.width,canvas.height)/2-100; // বড় গোল
+let arenaRadius=Math.min(canvas.width,canvas.height)/2-50; // বড়ো arena
 let arenaAngle=0;
 
-// Particles background
-const particles=[];
-for(let i=0;i<400;i++){
-particles.push({x:Math.random()*canvas.width,y:Math.random()*canvas.height,r:Math.random()*3+1,dx:(Math.random()-0.5)/2,dy:(Math.random()-0.5)/2});
-}
-
-// Country flags 70+
+// Country Flags 50-70
 const countryFlags={
 "Bangladesh":"https://flagcdn.com/w80/bd.png","USA":"https://flagcdn.com/w80/us.png","UK":"https://flagcdn.com/w80/gb.png",
 "India":"https://flagcdn.com/w80/in.png","Japan":"https://flagcdn.com/w80/jp.png","France":"https://flagcdn.com/w80/fr.png",
@@ -45,11 +39,7 @@ const countryFlags={
 "Switzerland":"https://flagcdn.com/w80/ch.png","Austria":"https://flagcdn.com/w80/at.png","Turkey":"https://flagcdn.com/w80/tr.png",
 "Egypt":"https://flagcdn.com/w80/eg.png","South Africa":"https://flagcdn.com/w80/za.png","Kenya":"https://flagcdn.com/w80/ke.png",
 "Nepal":"https://flagcdn.com/w80/np.png","Bhutan":"https://flagcdn.com/w80/bt.png","Malaysia":"https://flagcdn.com/w80/my.png",
-"Singapore":"https://flagcdn.com/w80/sg.png","Indonesia":"https://flagcdn.com/w80/id.png","Philippines":"https://flagcdn.com/w80/ph.png",
-"Vietnam":"https://flagcdn.com/w80/vn.png","Laos":"https://flagcdn.com/w80/la.png","Cambodia":"https://flagcdn.com/w80/kh.png",
-"Mongolia":"https://flagcdn.com/w80/mn.png","Kazakhstan":"https://flagcdn.com/w80/kz.png","Uzbekistan":"https://flagcdn.com/w80/uz.png",
-"Lebanon":"https://flagcdn.com/w80/lb.png","Jordan":"https://flagcdn.com/w80/jo.png","Iraq":"https://flagcdn.com/w80/iq.png",
-"Syria":"https://flagcdn.com/w80/sy.png","Morocco":"https://flagcdn.com/w80/ma.png","Tunisia":"https://flagcdn.com/w80/tn.png"
+"Singapore":"https://flagcdn.com/w80/sg.png","Indonesia":"https://flagcdn.com/w80/id.png","Philippines":"https://flagcdn.com/w80/ph.png"
 };
 
 // Flags array
@@ -61,23 +51,23 @@ class Flag{
 constructor(name,img){
 this.name=name;
 this.img=new Image(); this.img.src=img;
-this.radius=35; // বড়ো গোল
+this.radius=40; // আরও বড়ো flag circle
 this.maxHealth=100; this.health=this.maxHealth;
 let angle=Math.random()*Math.PI*2;
 let r=Math.random()*arenaRadius*0.7;
 this.x=centerX+Math.cos(angle)*r; this.y=centerY+Math.sin(angle)*r;
-this.vx=(Math.random()-0.5)*0.5; this.vy=(Math.random()-0.5)*0.5; // ধীরে ধীরে
+this.vx=(Math.random()-0.5)*0.3; this.vy=(Math.random()-0.5)*0.3; // ধীরে ধীরে
 this.swordAngle=Math.PI/4;
 }
 draw(){
 ctx.fillStyle='red';
-ctx.fillRect(this.x-25,this.y+40,50*this.health/this.maxHealth,6);
+ctx.fillRect(this.x-30,this.y+45,60*this.health/this.maxHealth,6);
 ctx.save();
 ctx.beginPath();
 ctx.arc(this.x,this.y,this.radius,0,Math.PI*2); ctx.closePath(); ctx.clip();
 ctx.drawImage(this.img,this.x-this.radius,this.y-this.radius,this.radius*2,this.radius*2); ctx.restore();
 ctx.save(); ctx.translate(this.x,this.y); ctx.rotate(this.swordAngle);
-ctx.strokeStyle='silver'; ctx.lineWidth=5; ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(0,-this.radius-30); ctx.stroke(); ctx.restore();
+ctx.strokeStyle='silver'; ctx.lineWidth=6; ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(0,-this.radius-35); ctx.stroke(); ctx.restore();
 }
 update(){
 this.x+=this.vx; this.y+=this.vy;
@@ -87,7 +77,7 @@ let angle=Math.atan2(dy,dx);
 this.x=centerX+Math.cos(angle)*(arenaRadius-this.radius); this.y=centerY+Math.sin(angle)*(arenaRadius-this.radius);
 this.vx=-this.vx; this.vy=-this.vy;
 }
-this.swordAngle=Math.PI/4 + Math.sin(Date.now()/500)/8;
+this.swordAngle=Math.PI/4 + Math.sin(Date.now()/500)/10;
 }
 }
 
@@ -104,7 +94,7 @@ let targetX=f1.x+Math.cos(angle)*(f1.radius+f2.radius);
 let targetY=f1.y+Math.sin(angle)*(f1.radius+f2.radius);
 let ax=(targetX-f2.x)*0.01, ay=(targetY-f2.y)*0.01;
 f1.vx-=ax; f1.vy-=ay; f2.vx+=ax; f2.vy+=ay;
-f1.health-=0.01; f2.health-=0.01; // ধীরে ধীরে
+f1.health-=0.005; f2.health-=0.005; // ধীরে ধীরে ২ ঘণ্টা ধরে
 }
 }
 }
@@ -120,11 +110,10 @@ draw(){for(let p of this.particles){ctx.fillStyle=`rgba(255,${Math.floor(Math.ra
 // Draw loop
 function draw(){
 ctx.clearRect(0,0,canvas.width,canvas.height);
-// background
-ctx.fillStyle='rgba(10,15,44,0.3)'; ctx.fillRect(0,0,canvas.width,canvas.height);
-for(let p of particles){p.x+=p.dx;p.y+=p.dy;if(p.x<0)p.x=canvas.width;if(p.x>canvas.width)p.x=0;if(p.y<0)p.y=canvas.height;if(p.y>canvas.height)p.y=0;ctx.fillStyle='rgba(100,150,255,0.2)';ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fill();}
+// arena background
+ctx.fillStyle='rgba(10,15,44,0.6)'; ctx.fillRect(0,0,canvas.width,canvas.height);
 arenaAngle+=0.0005;
-ctx.save(); ctx.translate(centerX,centerY); ctx.rotate(arenaAngle); ctx.strokeStyle='rgba(255,255,255,0.2)'; ctx.lineWidth=10; ctx.beginPath(); ctx.arc(0,0,arenaRadius,0,Math.PI*2); ctx.stroke(); ctx.restore();
+ctx.save(); ctx.translate(centerX,centerY); ctx.rotate(arenaAngle); ctx.strokeStyle='rgba(255,255,255,0.2)'; ctx.lineWidth=12; ctx.beginPath(); ctx.arc(0,0,arenaRadius,0,Math.PI*2); ctx.stroke(); ctx.restore();
 
 // update & draw flags
 for(let f of flags){ f.update(); } handleCollisions(); for(let f of flags){ f.draw(); }
