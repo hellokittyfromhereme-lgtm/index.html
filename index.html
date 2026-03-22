@@ -1,42 +1,39 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Flag Arena Battle</title>
+<title>Flag Arena War</title>
 <style>
-    body {
-        margin: 0;
-        padding: 0;
-        overflow: hidden;
-        background: #000;
-        font-family: Arial, sans-serif;
-    }
-    #controls {
-        position: absolute;
-        top: 15px;
-        left: 50%;
-        transform: translateX(-50%);
-        z-index: 10;
-        text-align: center;
-        color: white;
-    }
-    #controls button, #controls select {
-        padding: 8px 12px;
-        margin: 0 8px;
-        font-size: 16px;
-        border-radius: 6px;
-        border: none;
-        cursor: pointer;
-    }
-    #info {
-        margin-top: 10px;
-        font-size: 20px;
-        font-weight: bold;
-        color: yellow;
-    }
-    canvas {
-        display: block;
-    }
+body {
+    margin: 0;
+    overflow: hidden;
+    background: #111;
+    font-family: Arial, sans-serif;
+}
+#controls {
+    position: absolute;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: white;
+    z-index: 10;
+    text-align: center;
+}
+#controls button, #controls select {
+    padding: 8px 12px;
+    margin: 0 5px;
+    font-size: 16px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+}
+#info {
+    margin-top: 8px;
+    font-size: 20px;
+    font-weight: bold;
+    color: yellow;
+}
+canvas { display: block; }
 </style>
 </head>
 <body>
@@ -49,56 +46,23 @@
     </select>
     <button onclick="startBattle()">Start</button>
     <button onclick="resetBattle()">Reset</button>
-    <div id="info">Choose duration and press Start</div>
+    <div id="info">Choose duration & press Start</div>
 </div>
 
 <canvas id="arena"></canvas>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
 <script>
-// ==== SETUP ====
-
-const { Engine, Render, Runner, World, Bodies, Body, Events } = Matter;
-
-const canvas = document.getElementById("arena");
-const info   = document.getElementById("info");
-const durationSelect = document.getElementById("duration");
-
-// full screen canvas
-canvas.width  = window.innerWidth;
+// ===== CANVAS SETUP =====
+const canvas = document.getElementById('arena');
+const ctx = canvas.getContext('2d');
+canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 
-// engine
-const engine = Engine.create();
-const world  = engine.world;
-world.gravity.y = 0;  // no gravity
-
-// arena circle
 const centerX = canvas.width/2;
 const centerY = canvas.height/2;
-const radius  = Math.min(canvas.width, canvas.height) / 2 - 50;
+const arenaRadius = Math.min(canvas.width, canvas.height)/2 - 100;
 
-// create bounding circle
-const circleWall = Bodies.circle(centerX, centerY, radius, {
-    isStatic: true,
-    render: { visible: false }
-});
-World.add(world, circleWall);
-
-// particle background effect
-function createBGParticles(){
-    for(let i=0; i<100; i++){
-        let p = Bodies.circle(Math.random()*canvas.width, Math.random()*canvas.height, 1,{
-            isStatic:true,
-            render:{ fillStyle:"#555"}
-        });
-        World.add(world, p);
-    }
-}
-createBGParticles();
-
-// ==== FLAGS ====
-
+// ===== FLAGS SETUP =====
 const countries = [
     {name:"Bangladesh", img:"https://flagcdn.com/w80/bd.png"},
     {name:"USA",       img:"https://flagcdn.com/w80/us.png"},
@@ -108,96 +72,132 @@ const countries = [
     {name:"France",    img:"https://flagcdn.com/w80/fr.png"},
     {name:"Germany",   img:"https://flagcdn.com/w80/de.png"},
 ];
+let flags = [];
+const flagRadius = 25;
 
-let flagBodies = [];
-
-function spawnFlags(){
-    flagBodies.forEach(b => World.remove(world, b));
-    flagBodies = [];
-
-    countries.forEach(c => {
-        let x = centerX + (Math.random()-0.5)*radius*0.6;
-        let y = centerY + (Math.random()-0.5)*radius*0.6;
-        let b = Bodies.circle(x, y, 25, {
-            restitution: 1,
-            friction: 0,
-            frictionAir: 0.02,
-            render: {
-                sprite: { texture: c.img, xScale: 0.6, yScale: 0.6 }
-            }
-        });
-        Body.setVelocity(b, {x: (Math.random()-0.5)*10, y: (Math.random()-0.5)*10});
-        flagBodies.push(b);
-        World.add(world, b);
-    });
+// ===== PARTICLE BACKGROUND =====
+const particles = [];
+for(let i=0;i<100;i++){
+    particles.push({x:Math.random()*canvas.width, y:Math.random()*canvas.height, r:Math.random()*2+1, dx:(Math.random()-0.5)/2, dy:(Math.random()-0.5)/2});
 }
 
-// ==== RENDER ====
-
-const render = Render.create({
-    canvas: canvas,
-    engine: engine,
-    options: {
-        width: canvas.width,
-        height: canvas.height,
-        wireframes: false,
-        background: "#000"
+// ===== FLAG CLASS =====
+class Flag {
+    constructor(country){
+        this.country = country;
+        this.x = centerX + (Math.random()-0.5)*arenaRadius*0.6;
+        this.y = centerY + (Math.random()-0.5)*arenaRadius*0.6;
+        this.vx = (Math.random()-0.5)*3;
+        this.vy = (Math.random()-0.5)*3;
+        this.radius = flagRadius;
+        this.img = new Image();
+        this.img.src = country.img;
     }
-});
-Render.run(render);
+    draw(){
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(this.x,this.y,this.radius,0,Math.PI*2);
+        ctx.closePath();
+        ctx.clip();
+        ctx.drawImage(this.img,this.x-this.radius,this.y-this.radius,this.radius*2,this.radius*2);
+        ctx.restore();
+    }
+    update(){
+        this.x += this.vx;
+        this.y += this.vy;
 
-const runner = Runner.create();
-Runner.run(runner, engine);
-
-// ==== COLLISION CONTROL ====
-
-Events.on(engine, "beforeUpdate", function(){
-    flagBodies.forEach(f => {
-        let dx = f.position.x - centerX;
-        let dy = f.position.y - centerY;
+        // Arena boundary collision
+        let dx = this.x - centerX;
+        let dy = this.y - centerY;
         let dist = Math.sqrt(dx*dx + dy*dy);
-        if(dist > radius - 30){
-            // push back inside
+        if(dist + this.radius > arenaRadius){
             let angle = Math.atan2(dy, dx);
-            Body.setPosition(f, {
-                x: centerX + Math.cos(angle)*(radius-30),
-                y: centerY + Math.sin(angle)*(radius-30)
-            });
-            // reflect velocity
-            Body.setVelocity(f, {
-                x: -f.velocity.x,
-                y: -f.velocity.y
-            });
+            this.x = centerX + Math.cos(angle)*(arenaRadius - this.radius);
+            this.y = centerY + Math.sin(angle)*(arenaRadius - this.radius);
+            this.vx = -this.vx;
+            this.vy = -this.vy;
         }
-    });
-});
+    }
+}
 
-// ==== GAME LOOP ====
+// ===== COLLISION DETECTION =====
+function handleCollisions(){
+    for(let i=0;i<flags.length;i++){
+        for(let j=i+1;j<flags.length;j++){
+            let f1 = flags[i];
+            let f2 = flags[j];
+            let dx = f2.x - f1.x;
+            let dy = f2.y - f1.y;
+            let dist = Math.sqrt(dx*dx + dy*dy);
+            if(dist < f1.radius + f2.radius){
+                // simple elastic collision
+                let angle = Math.atan2(dy, dx);
+                let targetX = f1.x + Math.cos(angle)*(f1.radius+f2.radius);
+                let targetY = f1.y + Math.sin(angle)*(f1.radius+f2.radius);
+                let ax = (targetX - f2.x)*0.05;
+                let ay = (targetY - f2.y)*0.05;
+                f1.vx -= ax;
+                f1.vy -= ay;
+                f2.vx += ax;
+                f2.vy += ay;
+            }
+        }
+    }
+}
 
-let battleTimer = null;
+// ===== DRAW FUNCTION =====
+function draw(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
 
+    // Draw background particles
+    for(let p of particles){
+        p.x += p.dx; p.y += p.dy;
+        if(p.x<0)p.x=canvas.width;if(p.x>canvas.width)p.x=0;
+        if(p.y<0)p.y=canvas.height;if(p.y>canvas.height)p.y=0;
+        ctx.fillStyle="rgba(255,255,255,0.3)";
+        ctx.beginPath();
+        ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+        ctx.fill();
+    }
+
+    // Draw arena
+    ctx.strokeStyle = "rgba(255,255,255,0.3)";
+    ctx.lineWidth = 5;
+    ctx.beginPath();
+    ctx.arc(centerX,centerY,arenaRadius,0,Math.PI*2);
+    ctx.stroke();
+
+    // Update & draw flags
+    for(let f of flags){
+        f.update();
+    }
+    handleCollisions();
+    for(let f of flags){
+        f.draw();
+    }
+
+    requestAnimationFrame(draw);
+}
+
+// ===== GAME CONTROL =====
+let battleTimeout = null;
 function startBattle(){
-    info.innerHTML = "Battle Started! 🛡️";
-    spawnFlags();
+    flags = countries.map(c => new Flag(c));
+    info.innerHTML = "Battle Started! ⚔️";
 
-    // set timer
-    let hours = parseFloat(durationSelect.value);
-    let ms = hours * 60 * 60 * 1000;
-
-    if(battleTimer) clearTimeout(battleTimer);
-
-    battleTimer = setTimeout(() => {
-        info.innerHTML = "Time's Up! ⏳ Battle Ended";
-    }, ms);
+    let hours = parseFloat(document.getElementById("duration").value);
+    if(battleTimeout) clearTimeout(battleTimeout);
+    battleTimeout = setTimeout(()=>{ info.innerHTML="Time's Up! ⏳"; }, hours*60*60*1000);
 }
-
 function resetBattle(){
-    if(battleTimer) clearTimeout(battleTimer);
-    info.innerHTML = "Reset Done! Choose duration & Start";
-    flagBodies.forEach(b => World.remove(world, b));
-    flagBodies = [];
+    if(battleTimeout) clearTimeout(battleTimeout);
+    flags = [];
+    info.innerHTML="Reset Done! Choose duration & Start";
 }
 
+// start animation loop
+draw();
 </script>
+
 </body>
 </html>
