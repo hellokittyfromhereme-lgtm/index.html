@@ -2,120 +2,92 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>50-Country Cinematic Flag Battle</title>
+<title>Cinematic 50-70 Flag Battle Arena</title>
 <style>
 body { margin:0; overflow:hidden; background:#0a0f2c; font-family:Arial; }
 canvas { display:block; }
 </style>
 </head>
 <body>
-
 <canvas id="arena"></canvas>
 
 <script>
-// Canvas
+// Canvas setup
 const canvas=document.getElementById('arena');
 const ctx=canvas.getContext('2d');
 canvas.width=window.innerWidth;
 canvas.height=window.innerHeight;
 const centerX=canvas.width/2, centerY=canvas.height/2;
-let arenaRadius=Math.min(canvas.width,canvas.height)/2-150;
+let arenaRadius=Math.min(canvas.width,canvas.height)/2-100; // বড় গোল
 let arenaAngle=0;
 
-// Particles
+// Particles background
 const particles=[];
-for(let i=0;i<300;i++){
-particles.push({x:Math.random()*canvas.width,y:Math.random()*canvas.height,r:Math.random()*3+1,dx:(Math.random()-0.5)/1.5,dy:(Math.random()-0.5)/1.5});
+for(let i=0;i<400;i++){
+particles.push({x:Math.random()*canvas.width,y:Math.random()*canvas.height,r:Math.random()*3+1,dx:(Math.random()-0.5)/2,dy:(Math.random()-0.5)/2});
 }
 
-// 50 Country Flags
+// Country flags 70+
 const countryFlags={
-"Bangladesh":"https://flagcdn.com/w80/bd.png",
-"USA":"https://flagcdn.com/w80/us.png",
-"UK":"https://flagcdn.com/w80/gb.png",
-"India":"https://flagcdn.com/w80/in.png",
-"Japan":"https://flagcdn.com/w80/jp.png",
-"France":"https://flagcdn.com/w80/fr.png",
-"Germany":"https://flagcdn.com/w80/de.png",
-"Canada":"https://flagcdn.com/w80/ca.png",
-"Thailand":"https://flagcdn.com/w80/th.png",
-"Pakistan":"https://flagcdn.com/w80/pk.png",
-"Oman":"https://flagcdn.com/w80/om.png",
-"Tunisia":"https://flagcdn.com/w80/tn.png",
-"Uzbekistan":"https://flagcdn.com/w80/uz.png",
-"Sri Lanka":"https://flagcdn.com/w80/lk.png",
-"Yemen":"https://flagcdn.com/w80/ye.png",
-"Congo":"https://flagcdn.com/w80/cd.png",
-"Eswatini":"https://flagcdn.com/w80/sz.png",
-"Morocco":"https://flagcdn.com/w80/ma.png",
-"Nigeria":"https://flagcdn.com/w80/ng.png",
-"UAE":"https://flagcdn.com/w80/ae.png",
-"Brazil":"https://flagcdn.com/w80/br.png",
-"Argentina":"https://flagcdn.com/w80/ar.png",
-"Chile":"https://flagcdn.com/w80/cl.png",
-"Mexico":"https://flagcdn.com/w80/mx.png",
-"Venezuela":"https://flagcdn.com/w80/ve.png",
-"South Korea":"https://flagcdn.com/w80/kr.png",
-"North Korea":"https://flagcdn.com/w80/kp.png",
-"China":"https://flagcdn.com/w80/cn.png",
-"Russia":"https://flagcdn.com/w80/ru.png",
-"Italy":"https://flagcdn.com/w80/it.png",
-"Greece":"https://flagcdn.com/w80/gr.png",
-"Spain":"https://flagcdn.com/w80/es.png",
-"Portugal":"https://flagcdn.com/w80/pt.png",
-"Sweden":"https://flagcdn.com/w80/se.png",
-"Norway":"https://flagcdn.com/w80/no.png",
-"Finland":"https://flagcdn.com/w80/fi.png",
-"Poland":"https://flagcdn.com/w80/pl.png",
-"Netherlands":"https://flagcdn.com/w80/nl.png",
-"Belgium":"https://flagcdn.com/w80/be.png",
-"Switzerland":"https://flagcdn.com/w80/ch.png",
-"Austria":"https://flagcdn.com/w80/at.png",
-"Turkey":"https://flagcdn.com/w80/tr.png",
-"Egypt":"https://flagcdn.com/w80/eg.png",
-"South Africa":"https://flagcdn.com/w80/za.png",
-"Kenya":"https://flagcdn.com/w80/ke.png",
-"Morocco":"https://flagcdn.com/w80/ma.png",
-"Nepal":"https://flagcdn.com/w80/np.png",
-"Bhutan":"https://flagcdn.com/w80/bt.png",
-"Malaysia":"https://flagcdn.com/w80/my.png",
-"Singapore":"https://flagcdn.com/w80/sg.png",
-"Indonesia":"https://flagcdn.com/w80/id.png",
-"Philippines":"https://flagcdn.com/w80/ph.png"
+"Bangladesh":"https://flagcdn.com/w80/bd.png","USA":"https://flagcdn.com/w80/us.png","UK":"https://flagcdn.com/w80/gb.png",
+"India":"https://flagcdn.com/w80/in.png","Japan":"https://flagcdn.com/w80/jp.png","France":"https://flagcdn.com/w80/fr.png",
+"Germany":"https://flagcdn.com/w80/de.png","Canada":"https://flagcdn.com/w80/ca.png","Thailand":"https://flagcdn.com/w80/th.png",
+"Pakistan":"https://flagcdn.com/w80/pk.png","Oman":"https://flagcdn.com/w80/om.png","Tunisia":"https://flagcdn.com/w80/tn.png",
+"Uzbekistan":"https://flagcdn.com/w80/uz.png","Sri Lanka":"https://flagcdn.com/w80/lk.png","Yemen":"https://flagcdn.com/w80/ye.png",
+"Congo":"https://flagcdn.com/w80/cd.png","Eswatini":"https://flagcdn.com/w80/sz.png","Morocco":"https://flagcdn.com/w80/ma.png",
+"Nigeria":"https://flagcdn.com/w80/ng.png","UAE":"https://flagcdn.com/w80/ae.png","Brazil":"https://flagcdn.com/w80/br.png",
+"Argentina":"https://flagcdn.com/w80/ar.png","Chile":"https://flagcdn.com/w80/cl.png","Mexico":"https://flagcdn.com/w80/mx.png",
+"Venezuela":"https://flagcdn.com/w80/ve.png","South Korea":"https://flagcdn.com/w80/kr.png","North Korea":"https://flagcdn.com/w80/kp.png",
+"China":"https://flagcdn.com/w80/cn.png","Russia":"https://flagcdn.com/w80/ru.png","Italy":"https://flagcdn.com/w80/it.png",
+"Greece":"https://flagcdn.com/w80/gr.png","Spain":"https://flagcdn.com/w80/es.png","Portugal":"https://flagcdn.com/w80/pt.png",
+"Sweden":"https://flagcdn.com/w80/se.png","Norway":"https://flagcdn.com/w80/no.png","Finland":"https://flagcdn.com/w80/fi.png",
+"Poland":"https://flagcdn.com/w80/pl.png","Netherlands":"https://flagcdn.com/w80/nl.png","Belgium":"https://flagcdn.com/w80/be.png",
+"Switzerland":"https://flagcdn.com/w80/ch.png","Austria":"https://flagcdn.com/w80/at.png","Turkey":"https://flagcdn.com/w80/tr.png",
+"Egypt":"https://flagcdn.com/w80/eg.png","South Africa":"https://flagcdn.com/w80/za.png","Kenya":"https://flagcdn.com/w80/ke.png",
+"Nepal":"https://flagcdn.com/w80/np.png","Bhutan":"https://flagcdn.com/w80/bt.png","Malaysia":"https://flagcdn.com/w80/my.png",
+"Singapore":"https://flagcdn.com/w80/sg.png","Indonesia":"https://flagcdn.com/w80/id.png","Philippines":"https://flagcdn.com/w80/ph.png",
+"Vietnam":"https://flagcdn.com/w80/vn.png","Laos":"https://flagcdn.com/w80/la.png","Cambodia":"https://flagcdn.com/w80/kh.png",
+"Mongolia":"https://flagcdn.com/w80/mn.png","Kazakhstan":"https://flagcdn.com/w80/kz.png","Uzbekistan":"https://flagcdn.com/w80/uz.png",
+"Lebanon":"https://flagcdn.com/w80/lb.png","Jordan":"https://flagcdn.com/w80/jo.png","Iraq":"https://flagcdn.com/w80/iq.png",
+"Syria":"https://flagcdn.com/w80/sy.png","Morocco":"https://flagcdn.com/w80/ma.png","Tunisia":"https://flagcdn.com/w80/tn.png"
 };
 
-// Flags
+// Flags array
 let flags=[];
 let fireworks=[];
 
-// Flag Class
+// Flag class
 class Flag{
 constructor(name,img){
 this.name=name;
 this.img=new Image(); this.img.src=img;
-this.radius=25; this.maxHealth=100; this.health=this.maxHealth;
-let angle=Math.random()*Math.PI*2; let r=Math.random()*arenaRadius*0.6;
+this.radius=35; // বড়ো গোল
+this.maxHealth=100; this.health=this.maxHealth;
+let angle=Math.random()*Math.PI*2;
+let r=Math.random()*arenaRadius*0.7;
 this.x=centerX+Math.cos(angle)*r; this.y=centerY+Math.sin(angle)*r;
-this.vx=(Math.random()-0.5)*1; this.vy=(Math.random()-0.5)*1; this.swordAngle=Math.PI/4;
+this.vx=(Math.random()-0.5)*0.5; this.vy=(Math.random()-0.5)*0.5; // ধীরে ধীরে
+this.swordAngle=Math.PI/4;
 }
 draw(){
-// Health bar
 ctx.fillStyle='red';
-ctx.fillRect(this.x-20,this.y+30,40*this.health/this.maxHealth,5);
-// Flag circle
+ctx.fillRect(this.x-25,this.y+40,50*this.health/this.maxHealth,6);
 ctx.save();
 ctx.beginPath();
 ctx.arc(this.x,this.y,this.radius,0,Math.PI*2); ctx.closePath(); ctx.clip();
 ctx.drawImage(this.img,this.x-this.radius,this.y-this.radius,this.radius*2,this.radius*2); ctx.restore();
-// Sword
 ctx.save(); ctx.translate(this.x,this.y); ctx.rotate(this.swordAngle);
-ctx.strokeStyle='silver'; ctx.lineWidth=5; ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(0,-this.radius-25); ctx.stroke(); ctx.restore();
+ctx.strokeStyle='silver'; ctx.lineWidth=5; ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(0,-this.radius-30); ctx.stroke(); ctx.restore();
 }
 update(){
 this.x+=this.vx; this.y+=this.vy;
 let dx=this.x-centerX; let dy=this.y-centerY; let dist=Math.sqrt(dx*dx+dy*dy);
-if(dist+this.radius>arenaRadius){let angle=Math.atan2(dy,dx); this.x=centerX+Math.cos(angle)*(arenaRadius-this.radius); this.y=centerY+Math.sin(angle)*(arenaRadius-this.radius); this.vx=-this.vx; this.vy=-this.vy;}
-this.swordAngle=Math.PI/4 + Math.sin(Date.now()/300)/6;
+if(dist+this.radius>arenaRadius){
+let angle=Math.atan2(dy,dx);
+this.x=centerX+Math.cos(angle)*(arenaRadius-this.radius); this.y=centerY+Math.sin(angle)*(arenaRadius-this.radius);
+this.vx=-this.vx; this.vy=-this.vy;
+}
+this.swordAngle=Math.PI/4 + Math.sin(Date.now()/500)/8;
 }
 }
 
@@ -123,49 +95,55 @@ this.swordAngle=Math.PI/4 + Math.sin(Date.now()/300)/6;
 function handleCollisions(){
 for(let i=0;i<flags.length;i++){
 for(let j=i+1;j<flags.length;j++){
-let f1=flags[i],f2=flags[j]; let dx=f2.x-f1.x; let dy=f2.y-f1.y; let dist=Math.sqrt(dx*dx+dy*dy);
-if(dist<f1.radius+f2.radius){let angle=Math.atan2(dy,dx);
-let targetX=f1.x+Math.cos(angle)*(f1.radius+f2.radius); let targetY=f1.y+Math.sin(angle)*(f1.radius+f2.radius);
-let ax=(targetX-f2.x)*0.02; let ay=(targetY-f2.y)*0.02; f1.vx-=ax; f1.vy-=ay; f2.vx+=ax; f2.vy+=ay;
-f1.health-=0.03+Math.random()*0.03; f2.health-=0.03+Math.random()*0.03;
+let f1=flags[i],f2=flags[j];
+let dx=f2.x-f1.x, dy=f2.y-f1.y;
+let dist=Math.sqrt(dx*dx+dy*dy);
+if(dist<f1.radius+f2.radius){
+let angle=Math.atan2(dy,dx);
+let targetX=f1.x+Math.cos(angle)*(f1.radius+f2.radius);
+let targetY=f1.y+Math.sin(angle)*(f1.radius+f2.radius);
+let ax=(targetX-f2.x)*0.01, ay=(targetY-f2.y)*0.01;
+f1.vx-=ax; f1.vy-=ay; f2.vx+=ax; f2.vy+=ay;
+f1.health-=0.01; f2.health-=0.01; // ধীরে ধীরে
 }
 }
 }
 }
 
-// Fireworks
+// Firework
 class Firework{
-constructor(x,y){this.x=x;this.y=y;this.particles=[];for(let i=0;i<30;i++){let angle=Math.random()*Math.PI*2;let speed=Math.random()*5+2;this.particles.push({x:this.x,y:this.y,vx:Math.cos(angle)*speed,vy:Math.sin(angle)*speed,alpha:1});}}
-update(){for(let p of this.particles){p.x+=p.vx; p.y+=p.vy; p.vy+=0.05; p.alpha-=0.02;} this.particles=this.particles.filter(p=>p.alpha>0);}
-draw(){for(let p of this.particles){ctx.fillStyle=`rgba(255,${Math.floor(Math.random()*255)},0,${p.alpha})`;ctx.beginPath();ctx.arc(p.x,p.y,3,0,Math.PI*2);ctx.fill();}}
+constructor(x,y){this.x=x; this.y=y; this.particles=[];for(let i=0;i<50;i++){let angle=Math.random()*Math.PI*2;let speed=Math.random()*5+1;this.particles.push({x:this.x,y:this.y,vx:Math.cos(angle)*speed,vy:Math.sin(angle)*speed,alpha:1});}}
+update(){for(let p of this.particles){p.x+=p.vx;p.y+=p.vy;p.vy+=0.03;p.alpha-=0.01;}this.particles=this.particles.filter(p=>p.alpha>0);}
+draw(){for(let p of this.particles){ctx.fillStyle=`rgba(255,${Math.floor(Math.random()*255)},0,${p.alpha})`;ctx.beginPath();ctx.arc(p.x,p.y,4,0,Math.PI*2);ctx.fill();}}
 }
 
-// Draw Loop
+// Draw loop
 function draw(){
 ctx.clearRect(0,0,canvas.width,canvas.height);
 // background
 ctx.fillStyle='rgba(10,15,44,0.3)'; ctx.fillRect(0,0,canvas.width,canvas.height);
-// particles
-for(let p of particles){p.x+=p.dx;p.y+=p.dy;if(p.x<0)p.x=canvas.width;if(p.x>canvas.width)p.x=0;if(p.y<0)p.y=canvas.height;if(p.y>canvas.height)p.y=0;ctx.fillStyle='rgba(100,150,255,0.3)'; ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2); ctx.fill();}
-arenaAngle+=0.001;
-ctx.save(); ctx.translate(centerX,centerY); ctx.rotate(arenaAngle); ctx.strokeStyle='rgba(255,255,255,0.3)'; ctx.lineWidth=8; ctx.beginPath(); ctx.arc(0,0,arenaRadius,0,Math.PI*2); ctx.stroke(); ctx.restore();
+for(let p of particles){p.x+=p.dx;p.y+=p.dy;if(p.x<0)p.x=canvas.width;if(p.x>canvas.width)p.x=0;if(p.y<0)p.y=canvas.height;if(p.y>canvas.height)p.y=0;ctx.fillStyle='rgba(100,150,255,0.2)';ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fill();}
+arenaAngle+=0.0005;
+ctx.save(); ctx.translate(centerX,centerY); ctx.rotate(arenaAngle); ctx.strokeStyle='rgba(255,255,255,0.2)'; ctx.lineWidth=10; ctx.beginPath(); ctx.arc(0,0,arenaRadius,0,Math.PI*2); ctx.stroke(); ctx.restore();
 
-// flags
+// update & draw flags
 for(let f of flags){ f.update(); } handleCollisions(); for(let f of flags){ f.draw(); }
-// fireworks
+
+// fireworks celebration always
+if(flags.length>0){ fireworks.push(new Firework(centerX,centerY)); }
 fireworks.forEach(fw=>{ fw.update(); fw.draw(); });
 fireworks=fireworks.filter(fw=>fw.particles.length>0);
-// last survivors celebration
-if(flags.length>0){ fireworks.push(new Firework(flags[0].x,flags[0].y)); }
 
 requestAnimationFrame(draw);
 }
 draw();
 
-// Initialize 50 flags auto for 2 hours
+// Initialize 50-70 flags, auto 2 hours
 function startAutoBattle(){
-flags=Object.keys(countryFlags).slice(0,50).map(n=>new Flag(n,countryFlags[n]));
-setTimeout(()=>{console.log("Battle Complete!");},2*60*60*1000); // 2 hours
+let allCountries=Object.keys(countryFlags);
+let selected=allCountries.slice(0,70);
+flags=selected.map(n=>new Flag(n,countryFlags[n]));
+setTimeout(()=>{ console.log("2-hour battle complete"); },2*60*60*1000); // 2 hours
 }
 startAutoBattle();
 </script>
