@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Ultimate Flag Arena Battle</title>
+<title>Ultimate Cinematic Flag Arena Battle</title>
 <style>
 body { margin:0; overflow:hidden; background:#0a0f2c; font-family:Arial; }
 #controls {
@@ -17,22 +17,22 @@ canvas { display:block; }
 <body>
 
 <div id="controls">
-    <input id="countryInput" placeholder="Type country names comma separated" size="50">
-    <select id="numFlags">
-        <option value="10">10 Flags</option>
-        <option value="15">15 Flags</option>
-        <option value="20" selected>20 Flags</option>
-        <option value="25">25 Flags</option>
-        <option value="30">30 Flags</option>
-    </select>
-    <select id="duration">
-        <option value="0.5">30 Minutes</option>
-        <option value="1" selected>1 Hour</option>
-        <option value="2">2 Hours</option>
-    </select>
-    <button onclick="startBattle()">Start</button>
-    <button onclick="resetBattle()">Reset</button>
-    <div id="info">Enter countries & choose flags & duration</div>
+<input id="countryInput" placeholder="Type country names comma separated" size="50">
+<select id="numFlags">
+<option value="10">10 Flags</option>
+<option value="15">15 Flags</option>
+<option value="20" selected>20 Flags</option>
+<option value="25">25 Flags</option>
+<option value="30">30 Flags</option>
+</select>
+<select id="duration">
+<option value="0.5">30 Minutes</option>
+<option value="1" selected>1 Hour</option>
+<option value="2">2 Hours</option>
+</select>
+<button onclick="startBattle()">Start</button>
+<button onclick="resetBattle()">Reset</button>
+<div id="info">Enter countries & choose flags & duration</div>
 </div>
 
 <canvas id="arena"></canvas>
@@ -80,6 +80,8 @@ const countryFlags={
 
 // FLAGS ARRAY
 let flags=[];
+let battleTimeout=null;
+let fireworks=[];
 
 // FLAG CLASS
 class Flag{
@@ -94,17 +96,13 @@ constructor(name,img){
     let r=Math.random()*(arenaRadius*0.6);
     this.x=centerX+Math.cos(angle)*r;
     this.y=centerY+Math.sin(angle)*r;
-    this.vx=(Math.random()-0.5)*1.2; // slow movement for long battle
-    this.vy=(Math.random()-0.5)*1.2;
-    this.swordAngle=0;
-    this.swinging=true; // always sword in hand
+    this.vx=(Math.random()-0.5)*1; // slow for long battle
+    this.vy=(Math.random()-0.5)*1;
+    this.swordAngle=Math.PI/4;
 }
 draw(){
-// health bar
 ctx.fillStyle='red';
 ctx.fillRect(this.x-20,this.y+30,40*this.health/this.maxHealth,5);
-
-// flag circle
 ctx.save();
 ctx.beginPath();
 ctx.arc(this.x,this.y,this.radius,0,Math.PI*2);
@@ -112,13 +110,12 @@ ctx.closePath();
 ctx.clip();
 ctx.drawImage(this.img,this.x-this.radius,this.y-this.radius,this.radius*2,this.radius*2);
 ctx.restore();
-
-// sword
+// sword always
 ctx.save();
 ctx.translate(this.x,this.y);
 ctx.rotate(this.swordAngle);
 ctx.strokeStyle='silver';
-ctx.lineWidth=5; // bold sword
+ctx.lineWidth=5;
 ctx.beginPath();
 ctx.moveTo(0,0);
 ctx.lineTo(0,-this.radius-25);
@@ -126,23 +123,139 @@ ctx.stroke();
 ctx.restore();
 }
 update(){
-// arena circular boundary with rotation
+this.x+=this.vx;
+this.y+=this.vy;
+// arena boundary
 let dx=this.x-centerX;
 let dy=this.y-centerY;
 let dist=Math.sqrt(dx*dx+dy*dy);
 if(dist+this.radius>arenaRadius){
-    let angle=Math.atan2(dy,dx);
-    this.x=centerX+Math.cos(angle)*(arenaRadius-this.radius);
-    this.y=centerY+Math.sin(angle)*(arenaRadius-this.radius);
-    this.vx=-this.vx; this.vy=-this.vy;
+let angle=Math.atan2(dy,dx);
+this.x=centerX+Math.cos(angle)*(arenaRadius-this.radius);
+this.y=centerY+Math.sin(angle)*(arenaRadius-this.radius);
+this.vx=-this.vx; this.vy=-this.vy;
 }
-// move
-this.x+=this.vx;
-this.y+=this.vy;
-
-// sword swing slight animation
-this.swordAngle=Math.sin(Date.now()/200);
+this.swordAngle=Math.PI/4 + Math.sin(Date.now()/300)/6; // swing slight
 }
 }
 
-// --- CONTINUE NEXT: COLLISION, DRAW LOOP, GAME CONTROL ---
+// COLLISIONS
+function handleCollisions(){
+for(let i=0;i<flags.length;i++){
+    for(let j=i+1;j<flags.length;j++){
+        let f1=flags[i],f2=flags[j];
+        let dx=f2.x-f1.x;
+        let dy=f2.y-f1.y;
+        let dist=Math.sqrt(dx*dx+dy*dy);
+        if(dist<f1.radius+f2.radius){
+            // simple elastic
+            let angle=Math.atan2(dy,dx);
+            let targetX=f1.x+Math.cos(angle)*(f1.radius+f2.radius);
+            let targetY=f1.y+Math.sin(angle)*(f1.radius+f2.radius);
+            let ax=(targetX-f2.x)*0.02;
+            let ay=(targetY-f2.y)*0.02;
+            f1.vx-=ax; f1.vy-=ay;
+            f2.vx+=ax; f2.vy+=ay;
+            // slow health decrease
+            f1.health-=0.05+Math.random()*0.05;
+            f2.health-=0.05+Math.random()*0.05;
+        }
+    }
+}
+}
+
+// FIREWORKS FOR LAST SURVIVOR
+class Firework{
+constructor(x,y){
+    this.x=x; this.y=y; this.particles=[];
+    for(let i=0;i<30;i++){
+        let angle=Math.random()*Math.PI*2;
+        let speed=Math.random()*5+2;
+        this.particles.push({x:this.x,y:this.y,vx:Math.cos(angle)*speed,vy:Math.sin(angle)*speed,alpha:1});
+    }
+}
+update(){
+for(let p of this.particles){
+    p.x+=p.vx; p.y+=p.vy;
+    p.vy+=0.05; // gravity
+    p.alpha-=0.02;
+}
+this.particles=this.particles.filter(p=>p.alpha>0);
+}
+draw(){
+for(let p of this.particles){
+    ctx.fillStyle=`rgba(255,${Math.floor(Math.random()*255)},0,${p.alpha})`;
+    ctx.beginPath();
+    ctx.arc(p.x,p.y,3,0,Math.PI*2);
+    ctx.fill();
+}
+}
+}
+
+// DRAW LOOP
+function draw(){
+ctx.clearRect(0,0,canvas.width,canvas.height);
+// background
+ctx.fillStyle='rgba(10,15,44,0.3)';
+ctx.fillRect(0,0,canvas.width,canvas.height);
+// particles
+for(let p of particles){
+    p.x+=p.dx; p.y+=p.dy;
+    if(p.x<0)p.x=canvas.width;if(p.x>canvas.width)p.x=0;
+    if(p.y<0)p.y=canvas.height;if(p.y>canvas.height)p.y=0;
+    ctx.fillStyle='rgba(100,150,255,0.3)';
+    ctx.beginPath();
+    ctx.arc(p.x,p.y,p.r,0,Math.PI*2); ctx.fill();
+}
+// arena snake-like rotation
+arenaAngle+=0.001;
+ctx.save();
+ctx.translate(centerX,centerY);
+ctx.rotate(arenaAngle);
+ctx.strokeStyle='rgba(255,255,255,0.3)';
+ctx.lineWidth=8;
+ctx.beginPath();
+ctx.arc(0,0,arenaRadius,0,Math.PI*2); ctx.stroke();
+ctx.restore();
+
+// flags
+for(let f of flags){ f.update(); }
+handleCollisions();
+for(let f of flags){ f.draw(); }
+
+// firework update
+fireworks.forEach(fw=>{ fw.update(); fw.draw(); });
+fireworks=fireworks.filter(fw=>fw.particles.length>0);
+
+// final survivor check
+if(flags.length===1){
+    fireworks.push(new Firework(flags[0].x,flags[0].y));
+}
+
+requestAnimationFrame(draw);
+}
+draw();
+
+// GAME CONTROL
+function startBattle(){
+if(battleTimeout) clearTimeout(battleTimeout);
+let input=document.getElementById("countryInput").value;
+let num=parseInt(document.getElementById("numFlags").value);
+let duration=parseFloat(document.getElementById("duration").value);
+let names=input.split(',').map(n=>n.trim()).filter(n=>countryFlags[n]);
+if(names.length<num) names=names.concat(Object.keys(countryFlags).filter(n=>!names.includes(n)));
+names=names.slice(0,num);
+flags=names.map(n=>new Flag(n,countryFlags[n]));
+document.getElementById("info").innerHTML="Battle Started! ⚔️";
+
+// battle duration
+battleTimeout=setTimeout(()=>{ document.getElementById("info").innerHTML="Time's Up! ⏳"; },duration*60*60*1000);
+}
+
+function resetBattle(){
+if(battleTimeout) clearTimeout(battleTimeout);
+flags=[]; fireworks=[]; document.getElementById("info").innerHTML="Reset Done! Choose countries & Start";
+}
+</script>
+</body>
+</html>
