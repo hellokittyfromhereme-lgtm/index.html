@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Flag Battle Game</title>
+
+<style>
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: linear-gradient(135deg, #ff7e5f, #feb47b);
+    text-align: center;
+    color: white;
+}
+
+h1 {
+    margin-top: 10px;
+}
+
+#game {
+    position: relative;
+    width: 700px;
+    height: 450px;
+    margin: 20px auto;
+    background: rgba(0,0,0,0.6);
+    border-radius: 15px;
+    overflow: hidden;
+}
+
+.flag {
+    position: absolute;
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    transition: 0.1s;
+    object-fit: cover;
+}
+
+#panel {
+    margin-top: 10px;
+}
+
+input, select {
+    padding: 5px;
+}
+
+button {
+    padding: 8px 15px;
+    margin: 5px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    background: #22c55e;
+    color: white;
+    font-weight: bold;
+}
+
+#info {
+    margin-top: 10px;
+    font-size: 24px;
+    font-weight: bold;
+    color: yellow;
+    text-shadow: 2px 2px 4px black;
+}
+</style>
+</head>
+
+<body>
+
+<h1>🌍 Country Flag Battle</h1>
+
+<div id="game"></div>
+
+<div id="panel">
+    <input id="name" placeholder="Country Name">
+    <input id="flag" placeholder="Flag Image URL">
+    <button onclick="addCountry()">Add Country</button>
+    <button onclick="startGame()">Start</button>
+    <button onclick="resetGame()">Reset</button>
+    <br>
+    <label>Set Duration: </label>
+    <select id="duration">
+        <option value="0.5">30 minutes</option>
+        <option value="1">1 hour</option>
+        <option value="2">2 hours</option>
+    </select>
+</div>
+
+<div id="info">Add countries or press Start!</div>
+
+<script>
+const game = document.getElementById("game");
+const info = document.getElementById("info");
+let flags = [];
+let gameInterval = null;
+let timerTimeout = null;
+
+let countries = [
+{ name: "Bangladesh", img: "https://flagcdn.com/w40/bd.png" },
+{ name: "USA", img: "https://flagcdn.com/w40/us.png" },
+{ name: "UK", img: "https://flagcdn.com/w40/gb.png" },
+{ name: "India", img: "https://flagcdn.com/w40/in.png" },
+{ name: "Pakistan", img: "https://flagcdn.com/w40/pk.png" },
+{ name: "Japan", img: "https://flagcdn.com/w40/jp.png" },
+{ name: "Canada", img: "https://flagcdn.com/w40/ca.png" },
+{ name: "France", img: "https://flagcdn.com/w40/fr.png" },
+{ name: "Germany", img: "https://flagcdn.com/w40/de.png" },
+{ name: "Thailand", img: "https://flagcdn.com/w40/th.png" },
+{ name: "Oman", img: "https://flagcdn.com/w40/om.png" },
+{ name: "Tunisia", img: "https://flagcdn.com/w40/tn.png" },
+{ name: "Uzbekistan", img: "https://flagcdn.com/w40/uz.png" },
+{ name: "Sri Lanka", img: "https://flagcdn.com/w40/lk.png" },
+{ name: "Yemen", img: "https://flagcdn.com/w40/ye.png" },
+{ name: "Congo", img: "https://flagcdn.com/w40/cd.png" },
+{ name: "Eswatini", img: "https://flagcdn.com/w40/sz.png" },
+{ name: "Morocco", img: "https://flagcdn.com/w40/ma.png" },
+{ name: "Nigeria", img: "https://flagcdn.com/w40/ng.png" },
+{ name: "UAE", img: "https://flagcdn.com/w40/ae.png" }
+];
+
+function renderFlags() {
+    game.innerHTML = "";
+    flags.forEach(f => game.appendChild(f.el));
+}
+
+function addCountry() {
+    const name = document.getElementById("name").value;
+    const img = document.getElementById("flag").value;
+    if(name && img){
+        const el = document.createElement("img");
+        el.src = img;
+        el.className = "flag";
+        el.style.top = Math.random() * 400 + "px";
+        el.style.left = Math.random() * 650 + "px";
+        flags.push({ name, el, alive: true });
+        renderFlags();
+        document.getElementById("name").value = "";
+        document.getElementById("flag").value = "";
+    }
+}
+
+function startGame() {
+    if(flags.length === 0){
+        countries.forEach(c => {
+            const el = document.createElement("img");
+            el.src = c.img;
+            el.className = "flag";
+            el.style.top = Math.random() * 400 + "px";
+            el.style.left = Math.random() * 650 + "px";
+            flags.push({ name: c.name, el, alive: true });
+        });
+    }
+
+    info.innerHTML = "War Started! ⚔️";
+
+    if(gameInterval) clearInterval(gameInterval);
+    if(timerTimeout) clearTimeout(timerTimeout);
+
+    gameInterval = setInterval(() => {
+        let aliveFlags = flags.filter(f => f.alive);
+        if(aliveFlags.length <= 1){
+            clearInterval(gameInterval);
+            gameInterval = null;
+            if(aliveFlags.length === 1) info.innerHTML = "Winner: " + aliveFlags[0].name + " 🏆";
+            else info.innerHTML = "No winner!";
+            return;
+        }
+
+        aliveFlags.forEach(f => {
+            f.el.style.top = parseFloat(f.el.style.top) + (Math.random()*10 -5) + "px";
+            f.el.style.left = parseFloat(f.el.style.left) + (Math.random()*10 -5) + "px";
+        });
+
+        // Random elimination
+        if(Math.random() < 0.05){
+            const idx = Math.floor(Math.random() * aliveFlags.length);
+            aliveFlags[idx].alive = false;
+            aliveFlags[idx].el.style.opacity = 0.2;
+        }
+
+        renderFlags();
+    }, 200);
+
+    // Timer for war duration
+    let durationHours = parseFloat(document.getElementById("duration").value);
+    let durationMs = durationHours * 60 * 60 * 1000; // convert to milliseconds
+    timerTimeout = setTimeout(() => {
+        clearInterval(gameInterval);
+        gameInterval = null;
+        info.innerHTML = "Time's up! 🕒";
+    }, durationMs);
+}
+
+function resetGame(){
+    if(gameInterval) clearInterval(gameInterval);
+    if(timerTimeout) clearTimeout(timerTimeout);
+    gameInterval = null;
+    timerTimeout = null;
+    flags = [];
+    game.innerHTML = "";
+    info.innerHTML = "Game Reset!";
+}
+</script>
+
+</body>
+</html>
